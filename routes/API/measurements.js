@@ -16,9 +16,9 @@ router.route('/measurements')
   .post((req, res, next) => {
     const measurement = new Measurement({
         _id: new mongoose.Types.ObjectId(),
-        name: req.body.name,
-        results: req.body.results,
-        defaultReps: req.body.defaultReps
+        weight: req.body.weight,
+        waist: req.body.waist,
+        date: req.body.date
     })
     measurement.save()
       .then(data => {
@@ -32,20 +32,21 @@ router.route('/measurements')
       })
   })
 router.route('/measurements/:measurementId')
-  .patch((req, res, next) => {
+  .patch(async (req, res, next) => {
     const id = req.params.measurementId
-    const updateOperations = {}
-    req.body.map(operations => updateOperations[operations.propName] = operations.value)
-    Measurement.update({_id: id}, {$set: updateOperations})
-      .then(data => {
-        res.status(200).json(data)
-      })
-      .catch(err => {
-        res.status(500).json({error: err})
-      })
+    const measurement = await Measurement.findById(id).exec()
+    if (!measurement) return res.status(404).send('The exercise with the given ID was not found.')
+    let query = {$set: {}}
+    for (let key in req.body) {
+      if (measurement[key] && measurement[key] !== req.body[key])
+        query.$set[key] = req.body[key];
+    }
+    Measurement.findOneAndUpdate({_id: id}, query)
+      .then(data => res.status(200).json(data))
+      .catch(err => res.status(500).json({error: err}))
   })
   .delete((req, res, next) => {
-    const id = req.params.exerciseId
+    const id = req.params.measurementId
     Measurement.remove({_id: id})
       .then(data => {res.status(200).json(data)})
       .catch(err => {

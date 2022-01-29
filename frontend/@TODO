@@ -1,0 +1,15 @@
+@TODO
+- change styles folder name
+
+Menu.tsx
+- es lint comment fix
+
+Card
+- find data type for Date
+- date validation in front and tests
+
+API 
+ - make type for api res
+ - make proper catch errors
+ - change BASE_URL to .env var
+ 

@@ -33,17 +33,27 @@ router.route('/exercises')
       })
   })
 router.route('/exercises/:exerciseId')
-  .patch((req, res, next) => {
-    const id = req.params.exerciseId
-    const updateOperations = {}
-    req.body.map(operations => updateOperations[operations.propName] = operations.value)
-    Exercise.update({_id: id}, {$set: updateOperations})
+  .get((req, res, next)=> {
+    Exercise.findOne({_id: req.params.exerciseId})
       .then(data => {
         res.status(200).json(data)
       })
       .catch(err => {
         res.status(500).json({error: err})
       })
+  })
+  .patch(async (req, res, next) => {
+    const id = req.params.exerciseId
+    const exercise = await Exercise.findById(id).exec()
+    if (!exercise) return res.status(404).send('The exercise with the given ID was not found.')
+    let query = {$set: {}}
+    for (let key in req.body) {
+      if (exercise[key] && exercise[key] !== req.body[key])
+        query.$set[key] = req.body[key];
+    }
+    Exercise.findOneAndUpdate({_id: id}, query)
+      .then(data => res.status(200).json(data))
+      .catch(err => res.status(500).json({error: err}))
   })
   .delete((req, res, next) => {
     const id = req.params.exerciseId
